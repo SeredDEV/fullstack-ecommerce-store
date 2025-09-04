@@ -1,0 +1,19 @@
+# Dockerfile para desarrollo del cliente
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm ci
+
+# Exponer puerto de Vite
+EXPOSE 5173
+
+# Variables de entorno para desarrollo
+ENV NODE_ENV=development
+
+# Comando para desarrollo con hot reload
+CMD ["npm", "run", "dev"]

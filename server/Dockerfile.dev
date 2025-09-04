@@ -1,0 +1,20 @@
+# Dockerfile para desarrollo del servidor
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY package*.json ./
+
+# Instalar dependencias incluyendo devDependencies
+RUN npm ci
+
+# Exponer puerto
+EXPOSE 5000
+
+# Variables de entorno para desarrollo
+ENV NODE_ENV=development
+ENV PORT=5000
+
+# Comando para desarrollo con nodemon
+CMD ["npm", "run", "dev"]

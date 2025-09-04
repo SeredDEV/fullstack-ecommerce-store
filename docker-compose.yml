@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # Base de datos MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: fullstack_mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: fullstack_store
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongodb/init:/docker-entrypoint-initdb.d
+    networks:
+      - fullstack_network
+
+  # Cache Redis
+  redis:
+    image: redis:7-alpine
+    container_name: fullstack_redis
+    restart: unless-stopped
+    command: redis-server --requirepass redis123
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - fullstack_network
+
+  # Servidor Backend
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: fullstack_server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/fullstack_store?authSource=admin
+      REDIS_URL: redis://:redis123@redis:6379
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    networks:
+      - fullstack_network
+
+  # Cliente Frontend
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: fullstack_client
+    restart: unless-stopped
+    ports:
+      - "5001:80"
+    depends_on:
+      - server
+    environment:
+      VITE_API_URL: http://localhost:5000
+    networks:
+      - fullstack_network
+
+  # MongoDB Admin UI (Mongo Express)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: fullstack_mongo_express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password123
+      ME_CONFIG_MONGODB_URL: mongodb://admin:password123@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongodb
+    networks:
+      - fullstack_network
+
+  # Redis Admin UI (RedisInsight)
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: fullstack_redis_insight
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+    volumes:
+      - redis_insight_data:/db
+    networks:
+      - fullstack_network
+
+networks:
+  fullstack_network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  redis_data:
+  redis_insight_data:
