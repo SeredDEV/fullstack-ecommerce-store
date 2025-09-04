@@ -3,7 +3,7 @@
 ## Estructura del Proyecto
 
 - `/client`: Frontend (React 19, Vite)
-- `/server`: Backend (Node.js, Express, MongoDB)
+- `/server`: Backend (Node.js, Express, MongoDB, Redis)
 
 ## Pasos Iniciales
 
